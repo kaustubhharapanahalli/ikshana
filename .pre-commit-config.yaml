@@ -16,7 +16,7 @@ repos:
 
       - id: pylint
         name: pylint
-        entry: pylint learn_words
+        entry: pylint ikshana
         language: system
         pass_filenames: false
         always_run: true
