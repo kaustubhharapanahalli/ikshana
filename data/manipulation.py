@@ -4,7 +4,7 @@ import pydicom
 import os
 
 
-def read_image(image_path: str) -> np.ndarray:
+def read_image(image_path: str, image_name: str) -> np.ndarray:
     """
     read_image: Reads images which are encoded in JPG, JPEG or PNG format.
 
@@ -18,11 +18,11 @@ def read_image(image_path: str) -> np.ndarray:
     np.ndarray
         Image once read, it is returned as a numpy array data.
     """
-    image = cv2.imread(image_path)
+    image = cv2.imread(os.path.join(image_path, image_name))
     return image
 
 
-def read_dicom(image_path: str) -> pydicom.dataset.FileDataset:  # type: ignore
+def read_dicom(image_path: str, image_name: str) -> pydicom.dataset.FileDataset:  # type: ignore
     """
     read_dicom: Function to read the DICOM image.
 
@@ -41,7 +41,7 @@ def read_dicom(image_path: str) -> pydicom.dataset.FileDataset:  # type: ignore
     _type_
         _description_
     """
-    dicom_image = pydicom.dcmread(image_path)
+    dicom_image = pydicom.dcmread(os.path.join(image_path, image_name))
     return dicom_image
 
 
