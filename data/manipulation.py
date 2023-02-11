@@ -43,3 +43,19 @@ def read_dicom(image_path: str) -> pydicom.dataset.FileDataset:  # type: ignore
     """
     dicom_image = pydicom.dcmread(image_path)
     return dicom_image
+
+
+def write_image(image_data: np.ndarray, path: str, name: str) -> None:
+    """
+    write_image: Writes a matrix of image data into a given folder location.
+
+    Parameters
+    ----------
+    image_data : np.ndarray
+        Image data represented in numpy array format.
+    path : str
+        Location where the image needs to be stored.
+    name : str
+        Image identifier that is associated with the data.
+    """
+    cv2.imwrite(os.path.join(path, name), image_data)
