@@ -3,6 +3,7 @@
 
 import os
 import cv2
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from data.manipulation import read_dicom, read_image, write_image
@@ -28,7 +29,7 @@ def check_read_dicom(
     image_path: str, image_name: str, plot_path: str, plot_name: str
 ):
     img_data = read_dicom(image_path=image_path, image_name=image_name)
-    print(img_data)
+    plt.imsave(os.path.join(plot_path, plot_name), img_data.pixel_array)
 
 
 if __name__ == "__main__":
@@ -46,3 +47,9 @@ if __name__ == "__main__":
 
     check_write_image(jpg_img_data, "outputs", "jpg_write.jpg")
     check_write_image(png_img_data, "outputs", "png_write.png")
+
+    dicom_path = os.path.join(
+        "datasets", "Practice_DICOM", "chestimages_DICOM"
+    )
+    dicom_name = "JPCLN001.dcm"
+    check_read_dicom(dicom_path, dicom_name, "outputs", "dicom_read.png")
