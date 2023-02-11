@@ -20,3 +20,26 @@ def read_image(image_path: str) -> np.ndarray:
     """
     image = cv2.imread(image_path)
     return image
+
+
+def read_dicom(image_path: str) -> pydicom.dataset.FileDataset:  # type: ignore
+    """
+    read_dicom: Function to read the DICOM image.
+
+    Function reads the DICOM image and returns the data extracted in the form
+    of a pydicom object. The object contains metadata of the DICOM image and
+    also the image data representation in a pixelarray data. The pixelarray
+    contains the image in the form of a numpy array.
+
+    Parameters
+    ----------
+    image_path : str
+        The path of the DICOM data in the folder that needs to be read.
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    dicom_image = pydicom.dcmread(image_path)
+    return dicom_image
