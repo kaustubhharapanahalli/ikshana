@@ -24,6 +24,13 @@ def check_write_image(
     write_image(image_data=image_data, path=image_path, name=image_name)
 
 
+def check_read_dicom(
+    image_path: str, image_name: str, plot_path: str, plot_name: str
+):
+    img_data = read_dicom(image_path=image_path, image_name=image_name)
+    print(img_data)
+
+
 if __name__ == "__main__":
     jpg_path = os.path.join("datasets", "Practice_PNGandJPG", "chestimage_JPG")
     jpg_name = "JPCLN001.jpg"
