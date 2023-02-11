@@ -130,3 +130,4 @@ dmypy.json
 
 # ikshana ignore files
 *datasets*
+*outputs*
