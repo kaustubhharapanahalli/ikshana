@@ -1,13 +1,15 @@
 #!bin/bash/python3
 # Warm-up exercise 1
 
+import logging
 import os
+
 import cv2
-import torch
-import pydicom
-import numpy as np
 import matplotlib.pyplot as plt
-from data.manipulation import read_dicom, read_image, write_image
+import numpy as np
+import pydicom
+
+from ikshana.data.manipulation import read_dicom, read_image, write_image
 
 
 def check_read_image(
