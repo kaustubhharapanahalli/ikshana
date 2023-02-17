@@ -1,7 +1,11 @@
+import logging
+import os
+
 import cv2
 import numpy as np
 import pydicom
-import os
+
+logger = logging.getLogger(__name__)
 
 
 def read_image(image_path: str, image_name: str) -> np.ndarray:
@@ -19,6 +23,7 @@ def read_image(image_path: str, image_name: str) -> np.ndarray:
         Image once read, it is returned as a numpy array data.
     """
     image = cv2.imread(os.path.join(image_path, image_name))
+    logger.info(f"Image {image_name} read successfully")
     return image
 
 
