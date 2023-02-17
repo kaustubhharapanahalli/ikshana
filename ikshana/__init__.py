@@ -16,9 +16,7 @@ logger_file_handler.setLevel(logging.INFO)
 
 
 # Create a Formatter for formatting the log messages
-logger_stream_formatter = logging.Formatter(
-    "%(name)s - [%(levelname)s]: %(message)s"
-)
+logger_stream_formatter = logging.Formatter("[%(levelname)s]: %(message)s")
 logger_file_formatter = logging.Formatter(
     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
