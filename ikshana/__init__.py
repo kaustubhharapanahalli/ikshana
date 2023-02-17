@@ -29,4 +29,4 @@ logger_file_handler.setFormatter(logger_file_formatter)
 logger.addHandler(logger_stream_handler)
 logger.addHandler(logger_file_handler)
 
-logger.info("Logging module setup and ready.")
+logger.info("Logging module setup and ready.\n")
