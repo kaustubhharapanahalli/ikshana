@@ -4,6 +4,7 @@
 import os
 import cv2
 import torch
+import pydicom
 import numpy as np
 import matplotlib.pyplot as plt
 from data.manipulation import read_dicom, read_image, write_image
@@ -11,7 +12,26 @@ from data.manipulation import read_dicom, read_image, write_image
 
 def check_read_image(
     image_path: str, image_name: str, plot_path: str, plot_name: str
-):
+) -> np.ndarray:
+    """
+    check_read_image: Function check read image implementation.
+
+    Parameters
+    ----------
+    image_path : str
+        Path of the image folder
+    image_name : str
+        name of the image to read
+    plot_path : str
+        Path where the image should be stored after reading
+    plot_name : str
+        Name of the plot in which to be saved in the folder
+
+    Returns
+    -------
+    np.ndarray
+        Returns the image in the form of a numpy array
+    """
     img_data = read_image(image_path=image_path, image_name=image_name)
     cv2.imwrite(os.path.join(plot_path, plot_name), img_data)
 
@@ -20,16 +40,29 @@ def check_read_image(
 
 def check_write_image(
     image_data: np.ndarray, image_path: str, image_name: str
-):
-    pass
+) -> None:
+    """
+    check_write_image: Function to write an image that is read.
+
+
+    Parameters
+    ----------
+    image_data : np.ndarray
+        Data of the PNG or JPG image read.
+    image_path : str
+        Path of the location where to write image.
+    image_name : str
+        Name of the image to be written in.
+    """
     write_image(image_data=image_data, path=image_path, name=image_name)
 
 
 def check_read_dicom(
     image_path: str, image_name: str, plot_path: str, plot_name: str
-):
+) -> pydicom.dataset.FileDataset:  # type: ignore
     img_data = read_dicom(image_path=image_path, image_name=image_name)
     plt.imsave(os.path.join(plot_path, plot_name), img_data.pixel_array)
+    return img_data
 
 
 if __name__ == "__main__":
