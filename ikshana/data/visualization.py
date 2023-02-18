@@ -3,7 +3,11 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import torch
+
+from ikshana.data.manipulation import read_image
 
 logger = logging.getLogger(__name__)
 
@@ -37,33 +41,39 @@ class Visualize:
                    their category folders.
 
         """
-        self.dataset_path: str = dataset_path
-        self.dataset_name: str = dataset_name
         self.type: str = type
+        self.train, self.test, self.val = "", "", ""
 
         # Logging of information
         logger.info(f"Dataset statistics:")
-        dataset_location: str = os.path.join(dataset_path, dataset_name)
+        self.dataset_location: str = os.path.join(dataset_path, dataset_name)
 
-        files: list = os.listdir(dataset_location)
+        files: list = os.listdir(self.dataset_location)
         for file in files:
 
+            # If dataset is for a classification problem, then the following
+            # condition will be used to provide the dataset statistics for
+            # each category.
             if type.lower() == "classification":
                 if (
-                    os.path.isdir(os.path.join(dataset_path, file))
+                    os.path.isdir(os.path.join(self.dataset_location, file))
                     and file.lower() == "train"
                 ):
+                    self.train = file
                     # Logging of information
                     logger.info("Train dataset distribution")
 
                     categories: list = os.listdir(
-                        os.path.join(dataset_path, file)
+                        os.path.join(self.dataset_location, file)
                     )
+                    self.category_count = len(categories)
 
                     for category in categories:
                         file_count: int = len(
                             os.listdir(
-                                os.path.join(dataset_path, file, category)
+                                os.path.join(
+                                    self.dataset_location, file, category
+                                )
                             )
                         )
 
@@ -71,19 +81,23 @@ class Visualize:
                         logger.info(f"{category.capitalize()}: {file_count}")
 
                 elif (
-                    os.path.isdir(os.path.join(dataset_path, file))
+                    os.path.isdir(os.path.join(self.dataset_location, file))
                     and file.lower() == "test"
                 ):
+                    self.test = file
                     # Logging of information
                     logger.info("Test dataset distribution")
                     categories: list = os.listdir(
-                        os.path.join(dataset_path, file)
+                        os.path.join(self.dataset_location, file)
                     )
+                    self.category_count = len(categories)
 
                     for category in categories:
                         file_count: int = len(
                             os.listdir(
-                                os.path.join(dataset_path, file, category)
+                                os.path.join(
+                                    self.dataset_location, file, category
+                                )
                             )
                         )
 
@@ -91,21 +105,86 @@ class Visualize:
                         logger.info(f"{category.capitalize()}: {file_count}")
 
                 elif (
-                    os.path.isdir(os.path.join(dataset_path, file))
+                    os.path.isdir(os.path.join(self.dataset_location, file))
                     and "val" in file.lower()
                 ):
+                    self.val = file
                     # Logging of information
                     logger.info("Validation dataset distribution")
                     categories: list = os.listdir(
-                        os.path.join(dataset_path, file)
+                        os.path.join(self.dataset_location, file)
                     )
+                    self.category_count = len(categories)
 
                     for category in categories:
                         file_count: int = len(
                             os.listdir(
-                                os.path.join(dataset_path, file, category)
+                                os.path.join(
+                                    self.dataset_location, file, category
+                                )
                             )
                         )
 
                         # Logging of information
                         logger.info(f"{category.capitalize()}: {file_count}")
+
+    def visualize_category_data(
+        self, samples_per_category: int, plot_name: str
+    ) -> None:
+        """
+        visualize_category_data: Visualize samples of data for each category.
+
+        Depending on the number of samples to be plotted per category, the
+        function will save an image as output in the plots folder showcasing
+        all the image samples per category. How many samples per category is
+        indicated by the samples_per_category variable and the name of the
+        saved plot will be decided based on the plot_names variable.
+
+        Parameters
+        ----------
+        samples_per_category : int
+            Indicates the number of samples to plot per category.
+        plot_name : str
+            Indicates the name in which the plot will be saved. This does not
+            contain the format of the plot.
+        """
+        rows, columns = self.category_count, samples_per_category
+        figure = plt.figure(
+            figsize=(4 * samples_per_category, int(2.5 * self.category_count))
+        )
+
+        figure_location: int = 1
+
+        for file in os.listdir(
+            os.path.join(self.dataset_location, self.train)
+        ):
+            data_for_category: list = os.listdir(
+                os.path.join(self.dataset_location, self.train, file)
+            )
+            count: int = len(data_for_category)
+
+            choices: torch.Tensor = torch.randint(
+                0, count, (samples_per_category,)
+            )
+
+            for choice in choices:
+                figure.add_subplot(rows, columns, figure_location)
+                plt.title(file)
+                plt.axis("off")
+                img_name: str = data_for_category[choice.item()]  # type: ignore
+                imdata: np.ndarray = read_image(
+                    os.path.join(
+                        self.dataset_location,
+                        self.train,
+                        file,
+                    ),
+                    img_name,
+                )
+                plt.imshow(imdata)
+
+                figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+            plt.savefig(os.path.join("plots", plot_name + ".png"))
