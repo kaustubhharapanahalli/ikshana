@@ -20,6 +20,7 @@ torch = "^1.13.1"
 torchvision = "^0.14.1"
 opencv-python-headless = "^4.7.0.68"
 opencv-python = "^4.7.0.68"
+tqdm = "^4.64.1"
 
 
 [tool.poetry.group.dev.dependencies]
