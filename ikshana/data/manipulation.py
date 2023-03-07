@@ -23,7 +23,7 @@ def read_image(image_path: str, image_name: str) -> np.ndarray:
         Image once read, it is returned as a numpy array data.
     """
     image = cv2.imread(os.path.join(image_path, image_name))
-    logger.info(f"Image {image_name} read successfully")
+    logger.debug(f"Image {image_name} read successfully")
     return image
 
 
@@ -47,6 +47,7 @@ def read_dicom(image_path: str, image_name: str) -> pydicom.dataset.FileDataset:
         _description_
     """
     dicom_image = pydicom.dcmread(os.path.join(image_path, image_name))
+    logger.debug(f"Image {image_name} read successfully")
     return dicom_image
 
 
@@ -64,3 +65,4 @@ def write_image(image_data: np.ndarray, path: str, name: str) -> None:
         Image identifier that is associated with the data.
     """
     cv2.imwrite(os.path.join(path, name), image_data)
+    logger.debug(f"Image {name} written successfully")
