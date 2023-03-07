@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import Dict
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -50,7 +51,6 @@ class Visualize:
 
         files: list = os.listdir(self.dataset_location)
         for file in files:
-
             # If dataset is for a classification problem, then the following
             # condition will be used to provide the dataset statistics for
             # each category.
@@ -62,7 +62,7 @@ class Visualize:
                     self.train = file
                     # Logging of information
                     logger.info("Train dataset distribution")
-
+                    categories_dict: Dict[str, int] = {}
                     categories: list = os.listdir(
                         os.path.join(self.dataset_location, file)
                     )
@@ -78,7 +78,16 @@ class Visualize:
                         )
 
                         # Logging of information
-                        logger.info(f"{category.capitalize()}: {file_count}")
+                        categories_dict[category.capitalize()] = file_count
+
+                    total_images = sum(list(categories_dict.values()))
+                    logger.info(f"Total images in train: {total_images}")
+                    category_separation: str = (
+                        "Categorical separation for each category - "
+                    )
+                    for key, val in categories_dict.items():
+                        category_separation += f"{key}: {val}; "
+                    logger.info(category_separation)
 
                 elif (
                     os.path.isdir(os.path.join(self.dataset_location, file))
@@ -87,6 +96,7 @@ class Visualize:
                     self.test = file
                     # Logging of information
                     logger.info("Test dataset distribution")
+                    categories_dict: Dict[str, int] = {}
                     categories: list = os.listdir(
                         os.path.join(self.dataset_location, file)
                     )
@@ -102,7 +112,16 @@ class Visualize:
                         )
 
                         # Logging of information
-                        logger.info(f"{category.capitalize()}: {file_count}")
+                        categories_dict[category.capitalize()] = file_count
+
+                    total_images = sum(list(categories_dict.values()))
+                    logger.info(f"Total images in test: {total_images}")
+                    category_separation: str = (
+                        "Categorical separation for each category - "
+                    )
+                    for key, val in categories_dict.items():
+                        category_separation += f"{key}: {val}; "
+                    logger.info(category_separation)
 
                 elif (
                     os.path.isdir(os.path.join(self.dataset_location, file))
@@ -111,6 +130,8 @@ class Visualize:
                     self.val = file
                     # Logging of information
                     logger.info("Validation dataset distribution")
+
+                    categories_dict: Dict[str, int] = {}
                     categories: list = os.listdir(
                         os.path.join(self.dataset_location, file)
                     )
@@ -126,7 +147,16 @@ class Visualize:
                         )
 
                         # Logging of information
-                        logger.info(f"{category.capitalize()}: {file_count}")
+                        categories_dict[category.capitalize()] = file_count
+
+                    total_images = sum(list(categories_dict.values()))
+                    logger.info(f"Total images in test: {total_images}")
+                    category_separation: str = (
+                        "Categorical separation for each category - "
+                    )
+                    for key, val in categories_dict.items():
+                        category_separation += f"{key}: {val}; "
+                    logger.info(category_separation)
 
     def visualize_category_data(
         self, samples_per_category: int, plot_name: str
@@ -187,4 +217,5 @@ class Visualize:
             if not os.path.exists("plots"):
                 os.mkdir("plots")
 
-            plt.savefig(os.path.join("plots", plot_name + ".png"))
+        plt.savefig(os.path.join("plots", plot_name + ".png"))
+        logger.info(f"Data sample visualization saved as {plot_name}.png")
