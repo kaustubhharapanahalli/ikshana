@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 from typing import Dict
 
 import matplotlib.pyplot as plt
@@ -42,26 +41,40 @@ class Visualize:
                    their category folders.
 
         """
+        # Initialization of class variables
         self.type: str = type
+
+        # The three variables are initialized for storing the names of the
+        # folders where the dataset for each separation are present. This will
+        # help in getting images for necessary dataset.
         self.train, self.test, self.val = "", "", ""
 
         # Logging of information
         logger.info(f"Dataset statistics:")
+
+        # The dataset_location contains the details of the location and the
+        # name of the dataset.
         self.dataset_location: str = os.path.join(dataset_path, dataset_name)
 
+        # List of all the files and folder present in the folder.
         files: list = os.listdir(self.dataset_location)
         for file in files:
             # If dataset is for a classification problem, then the following
             # condition will be used to provide the dataset statistics for
             # each category.
             if type.lower() == "classification":
+                # The condition is for getting details related to train set in
+                # the dataset.
                 if (
                     os.path.isdir(os.path.join(self.dataset_location, file))
                     and file.lower() == "train"
                 ):
+                    # Assigning the folder related to train set
                     self.train = file
                     # Logging of information
                     logger.info("Train dataset distribution")
+                    # dictionary to store the details of category to count per
+                    # category mapping.
                     categories_dict: Dict[str, int] = {}
                     categories: list = os.listdir(
                         os.path.join(self.dataset_location, file)
@@ -80,8 +93,12 @@ class Visualize:
                         # Logging of information
                         categories_dict[category.capitalize()] = file_count
 
+                    # The total images variable contains the count of the
+                    # total number of images in the training set.
                     total_images = sum(list(categories_dict.values()))
                     logger.info(f"Total images in train: {total_images}")
+
+                    # Logging statement as a string
                     category_separation: str = (
                         "Categorical separation for each category - "
                     )
@@ -89,6 +106,7 @@ class Visualize:
                         category_separation += f"{key}: {val}; "
                     logger.info(category_separation)
 
+                # repeat the same steps done for training, for test set.
                 elif (
                     os.path.isdir(os.path.join(self.dataset_location, file))
                     and file.lower() == "test"
@@ -123,6 +141,8 @@ class Visualize:
                         category_separation += f"{key}: {val}; "
                     logger.info(category_separation)
 
+                # repeat the same steps done for training, for validation set,
+                # if available.
                 elif (
                     os.path.isdir(os.path.join(self.dataset_location, file))
                     and "val" in file.lower()
@@ -219,3 +239,33 @@ class Visualize:
 
         plt.savefig(os.path.join("plots", plot_name + ".png"))
         logger.info(f"Data sample visualization saved as {plot_name}.png")
+
+    @staticmethod
+    def visualize_individual_image(
+        tensor_data: torch.Tensor,
+        class_name: str,
+        idx: int,
+        grayscale: bool = False,
+    ):
+        """
+        visualize_individual_image: Function to plot a single image output.
+
+        Parameters
+        ----------
+        tensor_data : torch.Tensor
+            Data provided in the format of a tensor from a dataloader.
+        class_name : str
+            name of the class to be displayed as title of the plot
+        idx : int
+            index of the image in the dataset to have unique plots for
+            individual images.
+        grayscale: bool
+            Check for plotting the image as a grayscale or color image.
+        """
+        data = tensor_data.detach().cpu().permute(1, 2, 0).squeeze().numpy()
+        if grayscale:
+            plt.gray()
+        plt.title(class_name)
+        plt.imsave(
+            os.path.join("plots", class_name + "_" + str(idx) + ".png"), data
+        )
