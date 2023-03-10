@@ -20,14 +20,8 @@ def walk_through_path(folder_path: Union[str, Path]):
         Location of the dataset.
     """
     for dirpath, dirnames, filenames in os.walk(folder_path):
-        print(
-            f"There are {len(dirnames)} directories and {len(filenames)} ",
-            f"images in '{dirpath}'.",
-        )
-
-        logger.info(
-            f"There are {len(dirnames)} directories and {len(filenames)} ",
-            f"images in '{dirpath}'.",
+        logger.debug(
+            f"There are {len(dirnames)} directories and {len(filenames)} images in '{dirpath}'.",
         )
 
 
@@ -65,8 +59,7 @@ def find_classification_classes(
         entry.name for entry in os.scandir(data_folder) if entry.is_dir()
     )
 
-    logger.info(f"Class names found: {classes}")
-    print(f"Class names found: {classes}")
+    logger.info(f"Classes present: {classes}")
 
     if not classes:
         raise FileNotFoundError(f"Couldn't find any classes in {data_folder}.")
@@ -75,9 +68,9 @@ def find_classification_classes(
     return classes, class_to_idx
 
 
-class ClassificationDataset(Dataset):
+class SingleLabelClassificationDataset(Dataset):
     """
-    ClassificationDataset: Classification Dataset generator using folders.
+    SingleLabelClassificationDataset: Classification Dataset generator using folders.
 
     The class generates unique dataset objects for different dataset folders
     containing images in the form of
