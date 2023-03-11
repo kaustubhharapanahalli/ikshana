@@ -1,7 +1,5 @@
 from typing import Any, List, Tuple, Type, Union
 
-import torch
-from torch import nn
 from torchvision import transforms
 
 
