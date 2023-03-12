@@ -2,7 +2,7 @@ from torch.utils.data import DataLoader, Dataset
 
 
 class BaseDataLoader:
-    def __init__(self, batch_size: int):
+    def __init__(self, batch_size: int, num_workers: int = 0):
         """
         __init__: Initialization of requirements for defining data loaders.
 
@@ -12,6 +12,7 @@ class BaseDataLoader:
             Batch size that needs to be used for training of the models.
         """
         self.batch_size = batch_size
+        self.num_workers = num_workers
 
     def train_loader(self, train_dataset: Dataset) -> DataLoader:
         """
@@ -31,7 +32,7 @@ class BaseDataLoader:
             train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=1,
+            num_workers=self.num_workers,
         )
 
     def validation_loader(self, validation_dataset: Dataset) -> DataLoader:
@@ -53,7 +54,7 @@ class BaseDataLoader:
             validation_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=1,
+            num_workers=self.num_workers,
         )
 
     def test_loader(self, test_dataset: Dataset) -> DataLoader:
@@ -74,5 +75,5 @@ class BaseDataLoader:
             test_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=1,
+            num_workers=self.num_workers,
         )
