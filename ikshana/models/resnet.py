@@ -368,11 +368,3 @@ def ResNet152(num_classes: int, in_channels: int = 3):
         block=BasicBlock,
         layers=[3, 4, 36, 3],
     )
-
-
-def test():
-    net = ResNet18(2, 1)
-    y = net(torch.randn(1, 1, 32, 32))
-
-
-# test()
