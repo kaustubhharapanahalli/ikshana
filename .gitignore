@@ -133,4 +133,5 @@ dmypy.json
 *outputs*
 *.DS_Store
 *logs*
-*plots*
+*plots/*
+*checkpoints/*
