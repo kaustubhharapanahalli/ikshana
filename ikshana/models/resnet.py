@@ -1,3 +1,5 @@
+# Paper is available here: https://arxiv.org/abs/1512.03385
+
 from typing import Callable, List, Optional
 
 import torch
