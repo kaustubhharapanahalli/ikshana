@@ -1,11 +1,11 @@
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import torch
 from PIL import Image
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Subset
 
 logger = logging.getLogger(__name__)
 
@@ -160,3 +160,55 @@ class SingleLabelClassificationDataset(Dataset):
             return self.transform(img), class_index
         else:
             return torch.tensor(img), class_index
+
+
+def generate_classification_dataset(
+    folder_path: Union[str, Path],
+    transforms: Dict,
+    train_folder: str = "train",
+    validation_folder: str | None = None,
+    test_folder: str = "test",
+    classification_type: str = "multiclass",
+    validation_split: float = 0.2,
+):
+    if classification_type.lower() == "multiclass":
+        train_path = os.path.join(folder_path, train_folder)
+        test_path = os.path.join(folder_path, test_folder)
+
+        if validation_folder is None:
+            validation_path = os.path.join(folder_path, train_folder)
+        else:
+            validation_path = os.path.join(folder_path, validation_folder)
+
+        train_dataset = SingleLabelClassificationDataset(
+            train_path, transforms["train_transform"]
+        )
+        validation_dataset = SingleLabelClassificationDataset(
+            validation_path, transforms["validation_transform"]
+        )
+        test_dataset = SingleLabelClassificationDataset(
+            test_path, transforms["test_transform"]
+        )
+
+        if validation_folder is None:
+            train_dataset_size = len(train_dataset)
+            valid_size = int(validation_split * train_dataset_size)
+
+            indices = torch.randperm(train_dataset_size).tolist()
+
+            train_dataset = Subset(
+                train_dataset, indices=indices[:-valid_size]
+            )
+            validation_dataset = Subset(
+                validation_dataset, indices=indices[-valid_size:]
+            )
+
+        return train_dataset, validation_dataset, test_dataset
+
+    else:
+        err_message = (
+            "Classification types - multiclass is supported. \n"
+            + "current value is invalid."
+        )
+        logger.error(err_message)
+        exit(-1)
