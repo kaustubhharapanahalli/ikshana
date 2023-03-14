@@ -263,11 +263,11 @@ class Visualize:
             Check for plotting the image as a grayscale or color image.
         """
         data = tensor_data.detach().cpu().permute(1, 2, 0).squeeze().numpy()
-        plt.figure(figsize=(10, 7))
         if grayscale:
             plt.gray()
-        plt.title(class_name)
-        plt.plot(data)
+        plt.imsave(
+            os.path.join("plots", class_name + "_" + str(idx) + ".png"), data
+        )
 
     @staticmethod
     def save_model_plots(
