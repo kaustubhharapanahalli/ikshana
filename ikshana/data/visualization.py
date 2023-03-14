@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict
+from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -263,9 +263,57 @@ class Visualize:
             Check for plotting the image as a grayscale or color image.
         """
         data = tensor_data.detach().cpu().permute(1, 2, 0).squeeze().numpy()
+        plt.figure(figsize=(10, 7))
         if grayscale:
             plt.gray()
         plt.title(class_name)
-        plt.imsave(
-            os.path.join("plots", class_name + "_" + str(idx) + ".png"), data
+        plt.plot(data)
+
+    @staticmethod
+    def save_model_plots(
+        train_accuracy: List[Any],
+        validation_accuracy: List[Any],
+        train_loss: List[Any],
+        valid_loss: List[Any],
+    ):
+        plt.figure(figsize=(10, 7))
+        plt.plot(
+            train_accuracy,
+            color="green",
+            linestyle="-",
+            label="Train Accuracy",
         )
+        plt.plot(
+            validation_accuracy,
+            color="blue",
+            linestyle="-",
+            label="Validation Accuracy",
+        )
+
+        plt.xlabel("Epochs")
+        plt.ylabel("Accuracy")
+        plt.legend()
+        plt.savefig(os.path.join("plots", "accuracy.png"))
+
+        plt.figure(figsize=(10, 7))
+        plt.plot(
+            train_loss,
+            color="yellow",
+            linestyle="-",
+            label="Train Loss",
+        )
+        plt.plot(
+            valid_loss,
+            color="red",
+            linestyle="-",
+            label="Validation Loss",
+        )
+
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.savefig(os.path.join("plots", "loss.png"))
+
+    @staticmethod
+    def plot_correct_incorrect_classifications(dataset, predictions):
+        pass
