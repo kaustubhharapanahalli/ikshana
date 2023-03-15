@@ -22,7 +22,7 @@ class SaveBestModel:
         if current_valid_loss < self.best_valid_loss:
             self.best_valid_loss = current_valid_loss
             logger.info(f"Best validation loss: {self.best_valid_loss}")
-            logger.info(f"Saving best model for epoch: {epoch+1}\n")
+            logger.info(f"Saving best model for epoch: {epoch+1}")
             torch.save(
                 {
                     "epoch": epoch + 1,
@@ -41,7 +41,7 @@ def save_model(
     criterion: Any,
     name: str,
 ):
-    logger.info(f"Saving model at {epoch + 1}")
+    logger.info(f"Saving model at {epoch + 1}\n")
     torch.save(
         {
             "epoch": epoch + 1,
