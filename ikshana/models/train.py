@@ -138,11 +138,3 @@ def train_model(
 
     vis.save_model_plots(train_acc, valid_acc, train_loss, valid_loss)
     logger.info("TRAINING COMPLETE\n")
-
-    vis.plot_correct_incorrect_classifications(
-        dataset["train_dataset"], TRAINING_PREDICTIONS, "training"
-    )
-
-    vis.plot_correct_incorrect_classifications(
-        dataset["validation_dataset"], VALIDATION_PREDICTIONS, "validation"
-    )
