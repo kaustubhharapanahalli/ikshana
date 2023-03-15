@@ -325,9 +325,7 @@ class Visualize:
     def plot_correct_incorrect_classifications(
         dataset, model_path, model, device, data_split_type, target_layer
     ):
-        checkpoint = torch.load(
-            os.path.join("checkpoints", "best_model_directions.pth")
-        )
+        checkpoint = torch.load(model_path)
         model.load_state_dict(checkpoint["model_state_dict"])
         samples_per_class = 4
         correct_index, incorrect_index = [], []
@@ -405,7 +403,7 @@ class Visualize:
             img, label = data_for_category
             figure.add_subplot(samples_per_class, num_classes, figure_location)
             plt.title(
-                f": {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
+                f"Predictions: {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
             )
             plt.axis("off")
             plt.imshow(
