@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader, Dataset, Subset
 from tqdm.auto import tqdm
 
 from ikshana.data.visualization import Visualize
@@ -11,7 +11,7 @@ from ikshana.utils.save_models import SaveBestModel, save_model
 
 logger = logging.getLogger(__name__)
 
-vis = Visualize("datasets", "Directions01", "Classification")
+TRAINING_PREDICTIONS, VALIDATION_PREDICTIONS = list(), list()
 
 
 def train_function(
@@ -38,6 +38,7 @@ def train_function(
         train_running_loss += loss.item()
 
         _, preds = torch.max(predictions.data, 1)
+        TRAINING_PREDICTIONS.extend(preds.tolist())
         train_running_correct += (preds == labels).sum().item()
 
         loss.backward()
@@ -73,6 +74,7 @@ def validate_function(
             valid_running_loss += loss.item()
 
             _, preds = torch.max(predictions.data, 1)
+            VALIDATION_PREDICTIONS.extend(preds.tolist())
             valid_running_correct += (preds == labels).sum().item()
 
     epoch_loss = valid_running_loss / counter
@@ -88,6 +90,8 @@ def train_model(
     optimizer: Any,
     device: str,
     epochs: int,
+    vis: Visualize,
+    dataset: Dict,
 ):
     train_loss, valid_loss, train_acc, valid_acc = [], [], [], []
     save_best_model = SaveBestModel()
@@ -134,3 +138,11 @@ def train_model(
 
     vis.save_model_plots(train_acc, valid_acc, train_loss, valid_loss)
     logger.info("TRAINING COMPLETE\n")
+
+    vis.plot_correct_incorrect_classifications(
+        dataset["train_dataset"], TRAINING_PREDICTIONS, "training"
+    )
+
+    vis.plot_correct_incorrect_classifications(
+        dataset["validation_dataset"], VALIDATION_PREDICTIONS, "validation"
+    )
