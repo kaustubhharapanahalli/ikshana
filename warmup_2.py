@@ -5,9 +5,6 @@ import random
 
 import torch
 import torch.nn as nn
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from torch import optim
 from torchsummary import summary
 from torchvision import transforms
@@ -24,7 +21,7 @@ logger = logging.getLogger(__name__)
 ###############################################################################
 ######################### HYPER-PARAMETER DEFINITIONS #########################
 ###############################################################################
-EPOCHS = 15
+EPOCHS = 20
 RANDOM_SEED = 42
 BATCH_SIZE = 8
 DEVICE = "cpu"
@@ -146,34 +143,47 @@ train_model(
     dataset,
 )
 
-# test_model(
-#     test_directions_model,
-#     os.path.join("checkpoints", "best_model_directions.pth"),
-#     test_dataloader,
-#     DEVICE,
-# )
+test_model(
+    test_directions_model,
+    os.path.join("checkpoints", "best_model_directions.pth"),
+    test_dataloader,
+    DEVICE,
+    dataset,
+)
 
-########################### MODEL - EVALUATION STEP ###########################
+###############################################################################
+################### MODEL EXPLAINABILITY AND VISUALIZATIONS ###################
+###############################################################################
 
+checkpoint = torch.load(
+    os.path.join("checkpoints", "best_model_directions.pth")
+)
+test_directions_model.load_state_dict(checkpoint["model_state_dict"])
+target_layer = [test_directions_model.layer3[-1]]
 
-# test_accuracy, predictions, labels = test_model(
-#     test_directions_model,
-#     os.path.join("checkpoints", "best_model_directions.pth"),
-#     test_dataloader,
-#     DEVICE,
-# )
+vis.plot_correct_incorrect_classifications(
+    train_dataset,
+    os.path.join("checkpoints", "best_model_directions.pth"),
+    test_directions_model,
+    DEVICE,
+    "train",
+    target_layer,
+)
 
+vis.plot_correct_incorrect_classifications(
+    validation_dataset,
+    os.path.join("checkpoints", "best_model_directions.pth"),
+    test_directions_model,
+    DEVICE,
+    "validation",
+    target_layer,
+)
 
-# print(f"Predictions:   {predictions}")
-# print(f"Ground truths: {labels}")
-# value = f1_score_function(np.array(labels), np.array(predictions), "weighted")
-# print(f"F1 Score = {value}")
-# print(
-#     classification_report_function(
-#         np.array(labels), np.array(predictions), list(class_names)
-#     )
-# )
-# roc_curve_function(
-#     np.array(labels), np.array(predictions), list(class_names), "ovr"
-# )
-# print(f"Test Accuracy = {test_accuracy}")
+vis.plot_correct_incorrect_classifications(
+    test_dataset,
+    os.path.join("checkpoints", "best_model_directions.pth"),
+    test_directions_model,
+    DEVICE,
+    "test",
+    target_layer,
+)
