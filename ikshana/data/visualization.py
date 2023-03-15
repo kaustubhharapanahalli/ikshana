@@ -1,11 +1,13 @@
 import logging
 import os
+import random
 from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from torch.utils.data import Subset
 
 from ikshana.data.manipulation import read_image
 
@@ -315,5 +317,125 @@ class Visualize:
         plt.savefig(os.path.join("plots", "loss.png"))
 
     @staticmethod
-    def plot_correct_incorrect_classifications(dataset, predictions):
-        pass
+    def plot_correct_incorrect_classifications(
+        dataset, predictions, data_split_type
+    ):
+        correct_index, incorrect_index = [], []
+        for i, data in enumerate(dataset):
+            image, label = data
+            if label == predictions[i]:
+                correct_index.append([i, label, predictions[i]])
+            else:
+                incorrect_index.append([i, label, predictions[i]])
+
+        if isinstance(dataset, Subset):
+            num_classes = len(dataset.dataset.classes)  # type: ignore
+            classes = dict()
+            correct_class_check = dict()
+            incorrect_class_check = dict()
+            for i, cls in enumerate(dataset.dataset.classes):  # type: ignore
+                classes[i] = cls
+                correct_class_check[i] = 0
+                incorrect_class_check[i] = 0
+        else:
+            num_classes = len(dataset.classes)
+            classes = dict()
+            correct_class_check = dict()
+            incorrect_class_check = dict()
+            for i, cls in enumerate(dataset.classes):  # type: ignore
+                classes[i] = cls
+                correct_class_check[i] = 0
+                incorrect_class_check[i] = 0
+
+        samples_per_class = 4
+        correct_plot_indices, incorrect_plot_indices = [], []
+
+        while len(correct_plot_indices) != samples_per_class * num_classes:
+            pick = random.choices(correct_index)[0]
+            if (
+                pick not in correct_plot_indices
+                and correct_class_check[pick[1]] != samples_per_class
+            ):
+                correct_plot_indices.append(pick)
+                correct_class_check[pick[1]] += 1
+
+        if len(incorrect_index) < samples_per_class * num_classes:
+            incorrect_plot_indices = incorrect_index
+        else:
+            while (
+                len(incorrect_plot_indices) != samples_per_class * num_classes
+            ):
+                pick = random.choices(incorrect_index)[0]
+                if (
+                    pick not in incorrect_plot_indices
+                    and incorrect_class_check[pick[1]] != samples_per_class
+                ):
+                    incorrect_plot_indices.append(pick)
+                    incorrect_class_check[pick[1]] += 1
+
+        figure = plt.figure(figsize=(4 * samples_per_class, 4 * num_classes))
+        figure_location: int = 1
+
+        for data in correct_plot_indices:
+            if isinstance(dataset, Subset):
+                data_for_category = dataset.dataset[data[0]]
+            else:
+                data_for_category = dataset[data[0]]
+
+            img, label = data_for_category
+            figure.add_subplot(samples_per_class, num_classes, figure_location)
+            plt.title(
+                f"Predicted: {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
+            )
+            plt.axis("off")
+            plt.imshow(
+                data_for_category[0]
+                .detach()
+                .cpu()
+                .permute(1, 2, 0)
+                .squeeze()
+                .numpy()
+            )
+
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join("plots", data_split_type + "_correct_predictions.png")
+        )
+
+        figure = plt.figure(figsize=(4 * samples_per_class, 4 * num_classes))
+        figure_location: int = 1
+        for data in incorrect_plot_indices:
+            if isinstance(dataset, Subset):
+                data_for_category = dataset.dataset[data[0]]
+            else:
+                data_for_category = dataset[data[0]]
+
+            img, label = data_for_category
+            figure.add_subplot(samples_per_class, num_classes, figure_location)
+            plt.title(
+                f"Predicted: {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
+            )
+            plt.axis("off")
+            plt.imshow(
+                data_for_category[0]
+                .detach()
+                .cpu()
+                .permute(1, 2, 0)
+                .squeeze()
+                .numpy()
+            )
+
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join(
+                "plots", data_split_type + "_incorrect_predictions.png"
+            )
+        )
