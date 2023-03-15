@@ -25,7 +25,7 @@ class SaveBestModel:
             logger.info(f"Saving best model for epoch: {epoch+1}")
             torch.save(
                 {
-                    "epoch": epoch + 1,
+                    "epoch": epoch,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "loss": criterion,
@@ -44,7 +44,7 @@ def save_model(
     logger.info(f"Saving model at {epoch + 1}\n")
     torch.save(
         {
-            "epoch": epoch + 1,
+            "epoch": epoch,
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict(),
             "loss": criterion,
