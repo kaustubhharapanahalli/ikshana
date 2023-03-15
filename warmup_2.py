@@ -3,38 +3,22 @@ import logging
 import os
 import random
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 import torch
 import torch.nn as nn
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 from torch import optim
-from torch.autograd import Variable
-from torch.utils.data import DataLoader, Dataset, Subset, random_split
 from torchsummary import summary
-from torchvision import datasets, io, models, transforms
-from torchvision.transforms import ToTensor
-from tqdm.auto import tqdm
+from torchvision import transforms
 
-from ikshana.data.generate_dataset import (
-    SingleLabelClassificationDataset,
-    generate_classification_dataset,
-)
+from ikshana.data.generate_dataset import generate_classification_dataset
 from ikshana.data.loader import BaseDataLoader
 from ikshana.data.transformation import TransformBase
 from ikshana.data.visualization import Visualize
 from ikshana.models.resnet import ResNet18
 from ikshana.models.test import test_model
-from ikshana.models.train import train_function, train_model, validate_function
-from ikshana.utils.metrics import (
-    classification_report_function,
-    f1_score_function,
-    roc_curve_function,
-)
-from ikshana.utils.save_models import SaveBestModel, save_model
+from ikshana.models.train import train_model
 
 logger = logging.getLogger(__name__)
 ###############################################################################
