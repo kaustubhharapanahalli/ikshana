@@ -141,6 +141,7 @@ train_model(
     EPOCHS,
     vis,
     dataset,
+    "directions",
 )
 
 test_model(
