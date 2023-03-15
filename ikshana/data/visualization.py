@@ -3,13 +3,17 @@ import os
 import random
 from typing import Any, Dict, List
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
+from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch.utils.data import Subset
 
 from ikshana.data.manipulation import read_image
+from ikshana.models.test import infer_image
+from ikshana.utils.explain import compute_grad_cam
 
 logger = logging.getLogger(__name__)
 
@@ -241,6 +245,7 @@ class Visualize:
 
         plt.savefig(os.path.join("plots", plot_name + ".png"))
         logger.info(f"Data sample visualization saved as {plot_name}.png")
+        plt.close()
 
     @staticmethod
     def visualize_individual_image(
@@ -300,7 +305,7 @@ class Visualize:
         plt.figure(figsize=(10, 7))
         plt.plot(
             train_loss,
-            color="yellow",
+            color="black",
             linestyle="-",
             label="Train Loss",
         )
@@ -318,15 +323,15 @@ class Visualize:
 
     @staticmethod
     def plot_correct_incorrect_classifications(
-        dataset, predictions, data_split_type
+        dataset, model_path, model, device, data_split_type, target_layer
     ):
+        checkpoint = torch.load(
+            os.path.join("checkpoints", "best_model_directions.pth")
+        )
+        model.load_state_dict(checkpoint["model_state_dict"])
+        samples_per_class = 4
         correct_index, incorrect_index = [], []
-        for i, data in enumerate(dataset):
-            image, label = data
-            if label == predictions[i]:
-                correct_index.append([i, label, predictions[i]])
-            else:
-                incorrect_index.append([i, label, predictions[i]])
+        correct_plot_indices, incorrect_plot_indices = [], []
 
         if isinstance(dataset, Subset):
             num_classes = len(dataset.dataset.classes)  # type: ignore
@@ -347,17 +352,32 @@ class Visualize:
                 correct_class_check[i] = 0
                 incorrect_class_check[i] = 0
 
-        samples_per_class = 4
-        correct_plot_indices, incorrect_plot_indices = [], []
+        for i, data in enumerate(dataset):  # type: ignore
+            image, label = data
+            image = image.to(device).unsqueeze(dim=0)
 
-        while len(correct_plot_indices) != samples_per_class * num_classes:
-            pick = random.choices(correct_index)[0]
-            if (
-                pick not in correct_plot_indices
-                and correct_class_check[pick[1]] != samples_per_class
-            ):
-                correct_plot_indices.append(pick)
-                correct_class_check[pick[1]] += 1
+            infer_result = infer_image(model.to(device), model_path, image)
+            infer_result = infer_result.detach().cpu().squeeze().item()
+
+            if infer_result != label:
+                incorrect_index.append([i, label, infer_result])
+                incorrect_class_check[label] += 1
+            else:
+                correct_index.append([i, label, infer_result])
+                correct_class_check[label] += 1
+
+        if len(correct_index) < samples_per_class * num_classes:
+            correct_plot_indices = correct_index
+        else:
+            while len(correct_plot_indices) != samples_per_class * num_classes:
+                pick = random.choices(correct_index)[0]
+                if (
+                    pick not in correct_plot_indices
+                    and correct_class_check[pick[1]] != samples_per_class
+                ):
+                    correct_plot_indices.append(pick)
+                    correct_index.remove(pick)
+                    correct_class_check[pick[1]] += 1
 
         if len(incorrect_index) < samples_per_class * num_classes:
             incorrect_plot_indices = incorrect_index
@@ -385,7 +405,7 @@ class Visualize:
             img, label = data_for_category
             figure.add_subplot(samples_per_class, num_classes, figure_location)
             plt.title(
-                f"Predicted: {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
+                f": {classes[data[1]]}, Ground Truth: {classes[data[2]]}"
             )
             plt.axis("off")
             plt.imshow(
@@ -405,6 +425,7 @@ class Visualize:
         plt.savefig(
             os.path.join("plots", data_split_type + "_correct_predictions.png")
         )
+        plt.close()
 
         figure = plt.figure(figsize=(4 * samples_per_class, 4 * num_classes))
         figure_location: int = 1
@@ -439,3 +460,227 @@ class Visualize:
                 "plots", data_split_type + "_incorrect_predictions.png"
             )
         )
+        plt.close()
+
+        figure = plt.figure(figsize=(7 * num_classes, 4 * samples_per_class))
+        figure_location: int = 1
+
+        for idx, label, pred in correct_plot_indices:
+            image, label = dataset[idx]
+            figure.add_subplot(
+                samples_per_class * 2, num_classes * 2, figure_location
+            )
+            plt.title(
+                f"Prediction: {classes[label]}, Ground Truth: {classes[pred]}"
+            )
+            plt.axis("off")
+            plt.imshow(image.detach().cpu().permute(1, 2, 0).squeeze().numpy())
+
+            figure_location += 1
+
+            grad_cam_output = compute_grad_cam(
+                model.to("cpu"), target_layer, image.to("cpu").unsqueeze(dim=0)
+            )
+            figure.add_subplot(
+                samples_per_class * 2, num_classes * 2, figure_location
+            )
+            plt.title("Grad-CAM Output")
+            plt.axis("off")
+            plt.imshow(
+                torch.tensor(grad_cam_output).squeeze().numpy(), cmap="plasma"
+            )
+
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join(
+                "plots",
+                data_split_type + "_separate_gradcam_correct_predictions.png",
+            )
+        )
+
+        plt.close()
+
+        figure = plt.figure(figsize=(7 * num_classes, 4 * samples_per_class))
+        figure_location: int = 1
+
+        for idx, label, pred in incorrect_plot_indices:
+            image, label = dataset[idx]
+            figure.add_subplot(
+                samples_per_class * 2, num_classes * 2, figure_location
+            )
+            plt.title(
+                f"Prediction: {classes[label]}, Ground Truth: {classes[pred]}"
+            )
+            plt.axis("off")
+            plt.imshow(image.detach().cpu().permute(1, 2, 0).squeeze().numpy())
+
+            figure_location += 1
+
+            grad_cam_output = compute_grad_cam(
+                model.to("cpu"), target_layer, image.to("cpu").unsqueeze(dim=0)
+            )
+            figure.add_subplot(
+                samples_per_class * 2, num_classes * 2, figure_location
+            )
+            plt.title("Grad-CAM Output")
+            plt.axis("off")
+            plt.imshow(
+                torch.tensor(grad_cam_output).squeeze().numpy(), cmap="plasma"
+            )
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join(
+                "plots",
+                data_split_type
+                + "_separate_gradcam_incorrect_predictions.png",
+            )
+        )
+        plt.close()
+
+        figure = plt.figure(figsize=(4 * num_classes, 4 * samples_per_class))
+        figure_location: int = 1
+
+        for idx, label, pred in correct_plot_indices:
+            image, label = dataset[idx]
+            grad_cam_output = compute_grad_cam(
+                model.to("cpu"), target_layer, image.to("cpu").unsqueeze(dim=0)
+            )
+            # Assuming 'gradcam_output' is the output from the Grad-CAM process
+            grad_cam_output = np.squeeze(
+                grad_cam_output
+            )  # Remove the single channel dimension
+
+            # Normalize the output to a range of 0-255 and convert to uint8
+            grad_cam_output = cv2.normalize(
+                grad_cam_output,
+                None,  # type: ignore
+                0,
+                255,
+                cv2.NORM_MINMAX,
+                dtype=cv2.CV_8U,
+            )
+
+            grad_cam_output = cv2.cvtColor(
+                cv2.applyColorMap(
+                    grad_cam_output,
+                    cv2.COLORMAP_JET,
+                ),
+                cv2.COLOR_BGR2RGB,
+            )
+            image = cv2.cvtColor(
+                image.permute(1, 2, 0).numpy(), cv2.COLOR_GRAY2RGB
+            )
+
+            image = cv2.normalize(
+                image,
+                None,  # type: ignore
+                0,
+                255,
+                cv2.NORM_MINMAX,
+                dtype=cv2.CV_8U,
+            )
+
+            masked_image = cv2.addWeighted(
+                grad_cam_output,
+                0.5,
+                image,
+                0.5,
+                0,
+            )
+            figure.add_subplot(samples_per_class, num_classes, figure_location)
+            plt.title(
+                f"Predicted: {classes[label]}, Ground Truth: {classes[pred]}"
+            )
+            plt.axis("off")
+            plt.imshow(masked_image)
+
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join(
+                "plots",
+                data_split_type + "_gradcam_correct_predictions.png",
+            )
+        )
+        plt.close()
+
+        figure = plt.figure(figsize=(4 * num_classes, 4 * samples_per_class))
+        figure_location: int = 1
+
+        for idx, label, pred in incorrect_plot_indices:
+            image, label = dataset[idx]
+            grad_cam_output = compute_grad_cam(
+                model.to("cpu"), target_layer, image.to("cpu").unsqueeze(dim=0)
+            )
+            # Assuming 'gradcam_output' is the output from the Grad-CAM process
+            grad_cam_output = np.squeeze(
+                grad_cam_output
+            )  # Remove the single channel dimension
+
+            # Normalize the output to a range of 0-255 and convert to uint8
+            grad_cam_output = cv2.normalize(
+                grad_cam_output,
+                None,  # type: ignore
+                0,
+                255,
+                cv2.NORM_MINMAX,
+                dtype=cv2.CV_8U,
+            )
+
+            grad_cam_output = cv2.cvtColor(
+                cv2.applyColorMap(
+                    grad_cam_output,
+                    cv2.COLORMAP_JET,
+                ),
+                cv2.COLOR_BGR2RGB,
+            )
+            image = cv2.cvtColor(
+                image.permute(1, 2, 0).numpy(), cv2.COLOR_GRAY2RGB
+            )
+
+            image = cv2.normalize(
+                image,
+                None,  # type: ignore
+                0,
+                255,
+                cv2.NORM_MINMAX,
+                dtype=cv2.CV_8U,
+            )
+
+            masked_image = cv2.addWeighted(
+                grad_cam_output,
+                0.5,
+                image,
+                0.5,
+                0,
+            )
+            figure.add_subplot(samples_per_class, num_classes, figure_location)
+            plt.title(
+                f"Predicted: {classes[label]}, Ground Truth: {classes[pred]}"
+            )
+            plt.axis("off")
+            plt.imshow(masked_image)
+
+            figure_location += 1
+
+            if not os.path.exists("plots"):
+                os.mkdir("plots")
+
+        plt.savefig(
+            os.path.join(
+                "plots",
+                data_split_type + "_gradcam_incorrect_predictions.png",
+            )
+        )
+        plt.close()
