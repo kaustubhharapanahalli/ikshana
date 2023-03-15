@@ -92,6 +92,7 @@ def train_model(
     epochs: int,
     vis: Visualize,
     dataset: Dict,
+    name: str,
 ):
     train_loss, valid_loss, train_acc, valid_acc = [], [], [], []
     save_best_model = SaveBestModel()
@@ -125,7 +126,7 @@ def train_model(
             model,
             optimizer,
             loss_function,
-            "directions",
+            name,
         )
         if epoch % 5 == 0:
             save_model(
@@ -133,7 +134,7 @@ def train_model(
                 model,
                 optimizer,
                 loss_function,
-                f"epoch_{epoch}_directions",
+                f"epoch_{epoch}_{name}",
             )
 
     vis.save_model_plots(train_acc, valid_acc, train_loss, valid_loss)
