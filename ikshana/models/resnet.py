@@ -2,7 +2,6 @@
 
 from typing import Callable, List, Optional
 
-import torch
 from torch import Tensor, nn
 from torchsummary import summary
 

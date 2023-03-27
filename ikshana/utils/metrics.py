@@ -1,8 +1,6 @@
 import logging
 from typing import Any, List, Literal
 
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from torchmetrics.functional import (
     accuracy,
